@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context="com.grabtaxi.themoviedb.MovieDetailsActivity"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/backdrop"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/movie_details_backdrop_height"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/movie_details_title_height"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/poster"
+            android:adjustViewBounds="true" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/title"
+            android:padding="@dimen/movie_details_title_padding"
+            android:textSize="@dimen/movie_details_title_text_size"
+            android:gravity="center_vertical"
+            android:background="@color/movie_details_title_bg"
+            android:textColor="@color/movie_details_title_text"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="marquee" />
+    </LinearLayout>
+    <ToggleButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/favourite"
+        android:background="@android:drawable/btn_star"
+        android:layout_gravity="center"
+        android:paddingTop="@dimen/movie_details_favourite_padding"
+        android:textOff=""
+        android:textOn="" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/overview"
+        android:padding="@dimen/movie_details_overview_padding" />
+
+    <at.technikum.mti.fancycoverflow.FancyCoverFlow
+        xmlns:fcf="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/related_movies"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#000000"
+        android:layout_gravity="bottom|center_horizontal"
+        fcf:maxRotation="45"
+        fcf:unselectedAlpha="0.3"
+        fcf:unselectedSaturation="0.0"
+        fcf:unselectedScale="0.4" />
+</LinearLayout>
