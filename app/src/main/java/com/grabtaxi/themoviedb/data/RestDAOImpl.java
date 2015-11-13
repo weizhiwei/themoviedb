@@ -1,5 +1,7 @@
 package com.grabtaxi.themoviedb.data;
 
+import android.text.TextUtils;
+
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.JsonObjectRequest;
 import com.grabtaxi.themoviedb.MyVolley;
@@ -17,7 +19,7 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
     static final String URL_NOW_SHOWING = "http://api.themoviedb.org/3/movie/now_playing?api_key=4df263f48a4fe2621749627f5d001bf0&page=%d";
     static final String URL_RELATED_MOVIES = "http://api.themoviedb.org/3/movie/%d/similar?api_key=4df263f48a4fe2621749627f5d001bf0&page=%%d";
     static final String URL_MOVIE_DETAILS = "http://api.themoviedb.org/3/movie/%d?api_key=4df263f48a4fe2621749627f5d001bf0";
-    private static final String URL_IMAGE_BASE = "http://image.tmdb.org/t/p/w500/";
+    private static final String URL_IMAGE_BASE = "http://image.tmdb.org/t/p/w500";
 
     private final String url;
 
@@ -73,8 +75,8 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         cb.onFailure(
-                                error.networkResponse.statusCode,
-                                error.networkResponse.toString());
+                                1,
+                                "Network Error");
                     }
                 }
         ));
@@ -155,13 +157,24 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
      }
      */
     private static Movie fromJson(JSONObject json) throws JSONException {
+
         return new Movie(
                 json.getLong("id"),
                 json.getString("title"),
-                URL_IMAGE_BASE + json.optString("poster_path"),
-                URL_IMAGE_BASE + json.optString("backdrop_path"),
+                getImageUrl(json, "poster_path"),
+                getImageUrl(json, "backdrop_path"),
                 json.optString("overview"),
                 json.optString("tagline")
         );
+    }
+
+    private static String getImageUrl(JSONObject json, String key) {
+        String url = json.optString(key).trim();
+        if (TextUtils.isEmpty(url) || url.equals("null")) {
+            url = "";
+        } else {
+            url = URL_IMAGE_BASE + url;
+        }
+        return url;
     }
 }

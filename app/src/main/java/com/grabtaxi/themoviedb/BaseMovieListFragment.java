@@ -15,6 +15,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.error.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.grabtaxi.themoviedb.data.DAOCallback;
 import com.grabtaxi.themoviedb.data.Movie;
@@ -46,12 +47,13 @@ public abstract class BaseMovieListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_movie_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_movie_list, container, false);
 
-        final SwipeRefreshLayout reload = (SwipeRefreshLayout) rootView.findViewById(R.id.reload);
-        GridView grid = (GridView) rootView.findViewById(R.id.grid);
+        final MySwipeRefreshLayout reload = (MySwipeRefreshLayout) rootView.findViewById(R.id.reload);
+        final GridView grid = (GridView) rootView.findViewById(R.id.grid);
 
-        final MovieListAdapter adapter = new MovieListAdapter(inflater);
+        final MovieListAdapter adapter = new MovieListAdapter(
+                inflater, getResources().getDimensionPixelSize(R.dimen.poster_width), getResources().getDimensionPixelSize(R.dimen.poster_height));
         grid.setAdapter(adapter);
         grid.setOnScrollListener(new EndlessScrollListener(5, 1) {
             @Override
@@ -104,6 +106,11 @@ public abstract class BaseMovieListFragment extends Fragment {
             }
         });
 
+        //
+        if (adapter.getCount() == 0) {
+            reload.triggerReload();
+        }
+
         return rootView;
     }
 
@@ -150,10 +157,14 @@ public abstract class BaseMovieListFragment extends Fragment {
     private static class MovieListAdapter extends BaseAdapter {
 
         private final LayoutInflater inflater;
+        private final int itemWidth;
+        private final int itemHeight;
         private final List<Movie> movies;
 
-        public MovieListAdapter(LayoutInflater inflater) {
+        public MovieListAdapter(LayoutInflater inflater, int itemWidth, int itemHeight) {
             this.inflater = inflater;
+            this.itemWidth = itemWidth;
+            this.itemHeight = itemHeight;
             this.movies = new ArrayList<>();
         }
 
@@ -188,6 +199,7 @@ public abstract class BaseMovieListFragment extends Fragment {
                 holder = new ItemViewHolder(
                         (ImageView) view.findViewById(R.id.image),
                         (TextView)  view.findViewById(R.id.text));
+                view.setLayoutParams(new GridView.LayoutParams(itemWidth, itemHeight));
                 view.setTag(holder);
             } else {
                 holder = (ItemViewHolder) view.getTag();
@@ -196,10 +208,9 @@ public abstract class BaseMovieListFragment extends Fragment {
             // update
             Movie movie = (Movie) getItem(position);
             holder.text.setText(movie.title);
-            MyVolley.getImageLoader().get(movie.poster,
-                    ImageLoader.getImageListener(holder.image,
-                            R.drawable.background_tab,
-                            R.drawable.background_tab));
+
+            holder.image.setVisibility(View.GONE);
+            App.updateImageView(holder.image, movie.poster);
 
             return view;
         }

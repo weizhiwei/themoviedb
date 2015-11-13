@@ -1,11 +1,12 @@
 <resources>
-    <dimen name="movie_list_spacing">8dp</dimen>
+    <dimen name="movie_list_spacing">4dp</dimen>
     <dimen name="movie_details_overview_padding">16dp</dimen>
-    <dimen name="movie_details_title_padding">20dp</dimen>
+    <dimen name="movie_details_title_padding">10dp</dimen>
     <dimen name="movie_details_favourite_padding">10dp</dimen>
     <dimen name="movie_details_backdrop_height">200dp</dimen>
-    <dimen name="movie_details_title_height">125dp</dimen>
     <dimen name="movie_details_title_text_size">30sp</dimen>
+    <dimen name="poster_width">100dp</dimen>
+    <dimen name="poster_height">130dp</dimen>
 
     <!-- Per the design guidelines, navigation drawers should be between 240dp and 320dp:
          https://developer.android.com/design/patterns/navigation-drawer.html -->
