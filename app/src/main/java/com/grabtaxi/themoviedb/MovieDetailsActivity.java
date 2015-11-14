@@ -1,9 +1,12 @@
 package com.grabtaxi.themoviedb;
 
+import android.content.Intent;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,6 +43,11 @@ public class MovieDetailsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
 
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         Bundle bundle = getIntent().getExtras();
         if (null != bundle) {
             final Movie movie = (Movie) bundle.get(ARG_MOVIE_DETAILS);
@@ -49,23 +57,57 @@ public class MovieDetailsActivity extends ActionBarActivity {
             updateMovieDetailsView(movie);
             setUpFavouriteButton(movie);
             setUpRelatedMovies(movie);
-            // this must be the last one
+            // this must be called last
             setUpReload(movie);
         }
     }
 
-    private void setUpRelatedMovies(Movie movie) {
-        final RelatedMoviesAdapter relatedMoviesAdapter = new RelatedMoviesAdapter(
-                getLayoutInflater(), getResources().getDimensionPixelSize(R.dimen.poster_width), getResources().getDimensionPixelSize(R.dimen.poster_height));
+    private void setUpRelatedMovies(final Movie movie) {
+        final RelatedMoviesAdapter adapter = new RelatedMoviesAdapter(
+                getLayoutInflater(),
+                getResources().getDimensionPixelSize(R.dimen.poster_width),
+                getResources().getDimensionPixelSize(R.dimen.poster_height)
+        );
+
+        final DAOCallback<List<Movie>> loadRelatedMoviesCb = new DAOCallback<List<Movie>>() {
+            @Override
+            public void onSuccess(List<Movie> movies) {
+                adapter.addMovies(movies);
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(int errCode, String errMsg) {
+
+            }
+        };
 
         final FancyCoverFlow relatedMovies = (FancyCoverFlow) findViewById(R.id.related_movies);
         relatedMovies.setReflectionEnabled(true);
         relatedMovies.setReflectionRatio(0.3f);
         relatedMovies.setReflectionGap(0);
-        relatedMovies.setAdapter(relatedMoviesAdapter);
+        relatedMovies.setAdapter(adapter);
+        relatedMovies.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (relatedMovies.getSelectedItemPosition() != position) {
+                    return;
+                }
+                final Movie m = (Movie) relatedMovies.getSelectedItem();
+                if (null != m) {
+                    Intent intent = new Intent(MovieDetailsActivity.this, MovieDetailsActivity.class);
+                    intent.putExtra(MovieDetailsActivity.ARG_MOVIE_DETAILS, m);
+                    startActivityForResult(intent, 0);
+                }
+            }
+        });
         relatedMovies.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > adapter.getCount() - 5) {
+                    final MovieListDAO relatedMoviesDao = DAOFactory.newRelatedMoviesDao(movie.id);
+                    relatedMoviesDao.load(adapter.getNextPage(), loadRelatedMoviesCb);
+                }
             }
 
             @Override
@@ -76,41 +118,49 @@ public class MovieDetailsActivity extends ActionBarActivity {
 
     private void setUpReload(final Movie movie) {
         final MySwipeRefreshLayout reload = (MySwipeRefreshLayout) findViewById(R.id.reload);
+        final TextView title = (TextView) findViewById(R.id.related_movies_title);
         final FancyCoverFlow relatedMovies = (FancyCoverFlow) findViewById(R.id.related_movies);
         final RelatedMoviesAdapter relatedMoviesAdapter = (RelatedMoviesAdapter) relatedMovies.getAdapter();
+
+        final DAOCallback<Movie> getMovieDetailsCb = new DAOCallback<Movie>() {
+            @Override
+            public void onSuccess(Movie m) {
+                reload.setRefreshing(false);
+                updateMovieDetailsView(m);
+            }
+
+            @Override
+            public void onFailure(int errCode, String errMsg) {
+                reload.setRefreshing(false);
+            }
+        };
+
+        final DAOCallback<List<Movie>> loadRelatedMoviesCb = new DAOCallback<List<Movie>>() {
+            @Override
+            public void onSuccess(List<Movie> movies) {
+                if (!movies.isEmpty()) {
+                    title.setVisibility(View.VISIBLE);
+                    relatedMovies.setVisibility(View.VISIBLE);
+                }
+
+                relatedMoviesAdapter.clear();
+                relatedMoviesAdapter.addMovies(movies);
+                relatedMoviesAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(int errCode, String errMsg) {
+
+            }
+        };
 
         reload.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                final MovieDetailsDAO movieDetailsDao = DAOFactory.newMovieDetailsDao();
+                final MovieDetailsDAO movieDetailsDao = DAOFactory.newMovieDetailsDao(movie.id);
                 final MovieListDAO relatedMoviesDao = DAOFactory.newRelatedMoviesDao(movie.id);
-
-                movieDetailsDao.getMovieDetails(movie.id, new DAOCallback<Movie>() {
-                    @Override
-                    public void onSuccess(Movie m) {
-                        reload.setRefreshing(false);
-                        updateMovieDetailsView(m);
-                    }
-
-                    @Override
-                    public void onFailure(int errCode, String errMsg) {
-                        reload.setRefreshing(false);
-                    }
-                });
-
-                relatedMoviesDao.load(1, new DAOCallback<List<Movie>>() {
-                    @Override
-                    public void onSuccess(List<Movie> movies) {
-                        relatedMoviesAdapter.clear();
-                        relatedMoviesAdapter.addMovies(movies);
-                        relatedMoviesAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onFailure(int errCode, String errMsg) {
-
-                    }
-                });
+                movieDetailsDao.getMovieDetails(getMovieDetailsCb);
+                relatedMoviesDao.load(1, loadRelatedMoviesCb);
             }
         });
 
@@ -135,20 +185,22 @@ public class MovieDetailsActivity extends ActionBarActivity {
                 favourite.setEnabled(true);
             }
         });
+
+        final DAOCallback<Boolean> setFavouriteCb = new DAOCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean isFavourite) {
+                favourite.setChecked(isFavourite);
+                favourite.setEnabled(true);
+            }
+
+            @Override
+            public void onFailure(int errCode, String errMsg) {
+                favourite.setEnabled(true);
+            }
+        };
         favourite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
-                favouritesDao.setFavourite(movie, isChecked, new DAOCallback<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean isFavourite) {
-                        favourite.setChecked(isFavourite);
-                        favourite.setEnabled(true);
-                    }
-
-                    @Override
-                    public void onFailure(int errCode, String errMsg) {
-                        favourite.setEnabled(true);
-                    }
-                });
+                favouritesDao.setFavourite(movie, isChecked, setFavouriteCb);
             }
         });
     }
@@ -205,20 +257,31 @@ public class MovieDetailsActivity extends ActionBarActivity {
         private final int itemWidth;
         private final int itemHeight;
         private final List<Movie> movies;
+        private int nextPage;
 
         RelatedMoviesAdapter(LayoutInflater inflater, int itemWidth, int itemHeight) {
             this.inflater = inflater;
             this.itemWidth = itemWidth;
             this.itemHeight = itemHeight;
             this.movies = new ArrayList<>();
+            this.nextPage = 1;
         }
 
         public void addMovies(List<Movie> movies) {
+            if (movies.isEmpty()) {
+                return;
+            }
             this.movies.addAll(movies);
+            ++nextPage;
         }
 
         public void clear() {
             movies.clear();
+            nextPage = 1;
+        }
+
+        public int getNextPage() {
+            return nextPage;
         }
 
         @Override
@@ -253,23 +316,24 @@ public class MovieDetailsActivity extends ActionBarActivity {
             }
 
             // update
-            Movie movie = (Movie) getItem(position);
+            final Movie movie = (Movie) getItem(position);
+
             holder.text.setText(movie.title);
 
-            holder.image.setVisibility(View.GONE);
+            holder.image.setVisibility(View.INVISIBLE);
             App.updateImageView(holder.image, movie.poster);
 
             return view;
         }
+    }
 
-        private static class ItemViewHolder {
-            final ImageView image;
-            final TextView text;
+    private static class ItemViewHolder {
+        final ImageView image;
+        final TextView text;
 
-            public ItemViewHolder(ImageView image, TextView text) {
-                this.image = image;
-                this.text = text;
-            }
+        public ItemViewHolder(ImageView image, TextView text) {
+            this.image = image;
+            this.text = text;
         }
     }
 }

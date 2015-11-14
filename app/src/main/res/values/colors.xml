@@ -2,5 +2,5 @@
 <resources>
     <color name="movie_details_title_bg">#233852</color>
     <color name="movie_details_title_text">#FFFFFF</color>
-    <color name="transparent_action_bar_bg">#3B000000</color>
+    <color name="transparent_action_bar_bg">#00000000</color>
 </resources>

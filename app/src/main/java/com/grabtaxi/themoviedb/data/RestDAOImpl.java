@@ -39,7 +39,10 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
                             JSONArray results = result.getJSONArray("results");
                             List<Movie> movies = new ArrayList<>(results.length());
                             for (int i = 0; i < results.length(); ++i) {
-                                movies.add(fromJson(results.getJSONObject(i)));
+                                final Movie movie = fromJson(results.getJSONObject(i));
+                                if (movie.isValid()) {
+                                    movies.add(movie);
+                                }
                             }
                             cb.onSuccess(movies);
                         } catch (JSONException e) {
@@ -57,15 +60,20 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
     }
 
     @Override
-    public void getMovieDetails(long movieId, final DAOCallback<Movie> cb) {
+    public void getMovieDetails(final DAOCallback<Movie> cb) {
         MyVolley.getRequestQueue().add(new JsonObjectRequest(
-                String.format(url, movieId),
+                url,
                 null,
                 new com.android.volley.Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject result) {
                         try {
-                            cb.onSuccess(fromJson(result));
+                            final Movie movie = fromJson(result);
+                            if (movie.isValid()) {
+                                cb.onSuccess(movie);
+                            } else {
+                                cb.onFailure(2, "Invalid Movie Data");
+                            }
                         } catch (JSONException e) {
                             cb.onFailure(0, "Invalid JSON");
                         }
@@ -160,20 +168,20 @@ class RestDAOImpl implements MovieListDAO, MovieDetailsDAO {
 
         return new Movie(
                 json.getLong("id"),
-                json.getString("title"),
-                getImageUrl(json, "poster_path"),
-                getImageUrl(json, "backdrop_path"),
-                json.optString("overview"),
-                json.optString("tagline")
+                getString(json, "title", ""),
+                getString(json, "poster_path", URL_IMAGE_BASE),
+                getString(json, "backdrop_path", URL_IMAGE_BASE),
+                getString(json, "overview", ""),
+                getString(json, "tagline", "")
         );
     }
 
-    private static String getImageUrl(JSONObject json, String key) {
+    private static String getString(JSONObject json, String key, String prefix) {
         String url = json.optString(key).trim();
         if (TextUtils.isEmpty(url) || url.equals("null")) {
             url = "";
         } else {
-            url = URL_IMAGE_BASE + url;
+            url = prefix + url;
         }
         return url;
     }

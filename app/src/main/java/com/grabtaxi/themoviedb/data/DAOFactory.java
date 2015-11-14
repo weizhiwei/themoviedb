@@ -14,7 +14,7 @@ public class DAOFactory {
         return new DbDAOImpl();
     }
 
-    public static MovieDetailsDAO newMovieDetailsDao() {
-        return new RestDAOImpl(RestDAOImpl.URL_MOVIE_DETAILS);
+    public static MovieDetailsDAO newMovieDetailsDao(long movieId) {
+        return new RestDAOImpl(String.format(RestDAOImpl.URL_MOVIE_DETAILS, movieId));
     }
 }

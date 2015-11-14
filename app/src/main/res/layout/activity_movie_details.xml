@@ -64,7 +64,7 @@
                 android:id="@+id/favourite"
                 android:background="@android:drawable/btn_star"
                 android:layout_gravity="center"
-                android:paddingTop="@dimen/movie_details_favourite_padding"
+                android:layout_marginTop="@dimen/movie_details_favourite_margin"
                 android:textOff=""
                 android:textOn="" />
 
@@ -75,6 +75,14 @@
                 android:padding="@dimen/movie_details_overview_padding"
                 android:visibility="gone" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/related_movies_title"
+                android:padding="@dimen/movie_details_title_padding"
+                android:text="@string/related_movies"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <at.technikum.mti.fancycoverflow.FancyCoverFlow
                 xmlns:fcf="http://schemas.android.com/apk/res-auto"
@@ -82,10 +90,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/poster_height"
                 android:layout_gravity="bottom|center_horizontal"
+                android:visibility="gone"
                 fcf:maxRotation="45"
                 fcf:unselectedAlpha="0.3"
                 fcf:unselectedSaturation="0.0"
                 fcf:unselectedScale="0.4" />
+
         </LinearLayout>
     </ScrollView>
 </com.grabtaxi.themoviedb.MySwipeRefreshLayout>

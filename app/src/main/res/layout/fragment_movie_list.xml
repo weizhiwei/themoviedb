@@ -11,6 +11,6 @@
         android:layout_height="match_parent"
         android:columnWidth="@dimen/poster_width"
         android:numColumns="auto_fit"
-        android:horizontalSpacing="@dimen/movie_list_spacing"
+        android:stretchMode="spacingWidthUniform"
         android:verticalSpacing="@dimen/movie_list_spacing" />
 </com.grabtaxi.themoviedb.MySwipeRefreshLayout>

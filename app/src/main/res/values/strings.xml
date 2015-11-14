@@ -1,8 +1,11 @@
 <resources>
+    <string-array name="section_titles">
+        <item>Discover</item>
+    </string-array>
     <string name="app_name">The Movie DB</string>
-    <string name="title_section1">Discover</string>
     <string name="now_showing">Now Showing</string>
     <string name="favourites">Favourites</string>
+    <string name="related_movies">Related Movies:</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

@@ -17,6 +17,6 @@
         android:id="@+id/image"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:visibility="gone" />
+        android:visibility="invisible" />
 
 </FrameLayout>

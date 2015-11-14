@@ -1,5 +1,7 @@
 package com.grabtaxi.themoviedb.data;
 
+import android.text.TextUtils;
+
 import java.io.Serializable;
 
 
@@ -19,5 +21,9 @@ public class Movie implements Serializable {
         this.backdrop = backdrop;
         this.overview = overview;
         this.tagline = tagline;
+    }
+
+    public boolean isValid() {
+        return id > 0 && !TextUtils.isEmpty(title);
     }
 }

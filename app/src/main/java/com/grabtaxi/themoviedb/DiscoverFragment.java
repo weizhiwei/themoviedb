@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +46,7 @@ public class DiscoverFragment extends Fragment {
                 new String[] { getString(R.string.now_showing), getString(R.string.favourites) },
                 new Fragment[] { new NowShowingFragment(), new FavouritesFragment() }
         ));
+        viewPager.getAdapter().notifyDataSetChanged();
 
         PagerSlidingTabStrip tabsStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
         tabsStrip.setViewPager(viewPager);
@@ -59,7 +61,7 @@ public class DiscoverFragment extends Fragment {
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
-    private static class DiscoverFragmentPagerAdapter extends FragmentPagerAdapter {
+    private static class DiscoverFragmentPagerAdapter extends FragmentStatePagerAdapter {
         private final String tabTitles[];
         private final Fragment fragments[];
 
