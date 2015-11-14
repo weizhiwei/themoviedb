@@ -24,6 +24,8 @@ import com.grabtaxi.themoviedb.data.MovieListDAO;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.srain.cube.views.GridViewWithHeaderAndFooter;
+
 
 public abstract class BaseMovieListFragment extends Fragment {
 
@@ -50,32 +52,33 @@ public abstract class BaseMovieListFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_movie_list, container, false);
 
         final MySwipeRefreshLayout reload = (MySwipeRefreshLayout) rootView.findViewById(R.id.reload);
-        final GridView grid = (GridView) rootView.findViewById(R.id.grid);
+        final GridViewWithHeaderAndFooter grid = (GridViewWithHeaderAndFooter) rootView.findViewById(R.id.grid);
 
         final MovieListAdapter adapter = new MovieListAdapter(
                 inflater, getResources().getDimensionPixelSize(R.dimen.poster_width), getResources().getDimensionPixelSize(R.dimen.poster_height));
-        grid.setAdapter(adapter);
-        grid.setOnScrollListener(new EndlessScrollListener(5, 1) {
+
+        View loadMore = inflater.inflate(R.layout.load_more, null, false);
+        loadMore.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onLoadMore(int page, int totalItemsCount) {
+            public void onClick(View v) {
                 reload.setRefreshing(true);
-                mDao.load(page, new DAOCallback<List<Movie>>() {
+                mDao.load(adapter.getNextPage(), new DAOCallback<List<Movie>>() {
                     @Override
                     public void onSuccess(List<Movie> movies) {
                         adapter.addMovies(movies);
                         adapter.notifyDataSetChanged();
                         reload.setRefreshing(false);
-                        setLoading(false);
                     }
 
                     @Override
                     public void onFailure(int errCode, String errMsg) {
                         reload.setRefreshing(false);
-                        setLoading(false);
                     }
                 });
             }
         });
+        grid.addFooterView(loadMore);
+        grid.setAdapter(adapter);
 
         grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -160,20 +163,31 @@ public abstract class BaseMovieListFragment extends Fragment {
         private final int itemWidth;
         private final int itemHeight;
         private final List<Movie> movies;
+        private int nextPage;
 
         public MovieListAdapter(LayoutInflater inflater, int itemWidth, int itemHeight) {
             this.inflater = inflater;
             this.itemWidth = itemWidth;
             this.itemHeight = itemHeight;
             this.movies = new ArrayList<>();
+            this.nextPage = 1;
         }
 
         public void addMovies(List<Movie> movies) {
+            if (movies.isEmpty()) {
+                return;
+            }
             this.movies.addAll(movies);
+            ++nextPage;
         }
 
         public void clear() {
             movies.clear();
+            nextPage = 1;
+        }
+
+        public int getNextPage() {
+            return nextPage;
         }
 
         @Override

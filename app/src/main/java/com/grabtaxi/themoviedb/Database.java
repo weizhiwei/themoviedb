@@ -79,10 +79,24 @@ public class Database {
 		return isIn;
     }
 
-    public List<Movie> fetchMoviesInFavourite(int offset, int limit) {
+    public int getRowIdByMovieId(long movieId) {
+        int rowId = -1;
+        Cursor cursor = mDb.query(TABLE_FAVOURITE, new String[] {"_id"}, "id='"+movieId+"'", null, null, null, null, 0+","+1);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (cursor.isAfterLast() == false) {
+                rowId = cursor.getInt(cursor.getColumnIndex("_id"));
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return rowId;
+    }
+
+    public List<Movie> fetchMoviesInFavourite(int fromRow, int limit) {
     	List<Movie> favourites = new ArrayList<>();
 
-    	Cursor cursor = mDb.query(TABLE_FAVOURITE, null, null, null, null, null, null, offset+","+limit);
+    	Cursor cursor = mDb.query(TABLE_FAVOURITE, null, "_id<"+fromRow, null, null, null, "_id DESC", 0+","+limit);
     	if (cursor != null) {
 			cursor.moveToFirst();
 			while (cursor.isAfterLast() == false) {

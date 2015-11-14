@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'dev.dworks.libs:volleyplus:+'
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
+    compile 'in.srain.cube:grid-view-with-header-footer:1.0.12'
 }

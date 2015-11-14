@@ -8,12 +8,20 @@ class DbDAOImpl implements FavouritesDAO {
 
     private static int ITEMS_PER_PAGE = 30;
 
+    private int fromRowId;
+
     @Override
     public void load(int page, DAOCallback<List<Movie>> cb) {
-        final int offset = (page - 1)*ITEMS_PER_PAGE;
         final int limit = ITEMS_PER_PAGE;
 
-        cb.onSuccess(Database.getInstance().fetchMoviesInFavourite(offset, limit));
+        if (1 == page) {
+            fromRowId = Integer.MAX_VALUE;
+        }
+        List<Movie> movies = Database.getInstance().fetchMoviesInFavourite(fromRowId, limit);
+        if (!movies.isEmpty()) {
+            fromRowId = Database.getInstance().getRowIdByMovieId(movies.get(movies.size() - 1).id);
+        }
+        cb.onSuccess(movies);
     }
 
     @Override
